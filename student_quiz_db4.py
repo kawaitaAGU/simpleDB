@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
 st.set_page_config(page_title="📘 学生指導用データベース", layout="wide")
 st.title("🔍 学生指導用データベース")
@@ -58,3 +59,30 @@ st.markdown(f"### 🏷️ 分類: **{record.get('科目分類', 'N/A')}**")
 
 # 💬 コメント欄
 st.text_area("💬 コメントを記録", "")
+
+# 💾 ファイル保存ボタン
+today = datetime.now().strftime("%m%d")
+
+if search:
+    filename_base = f"{search}_{today}"
+
+    # 📄 テキスト保存
+    if st.button("📥 ヒット結果を .txt で保存"):
+        txt_lines = []
+        for _, row in filtered_df.iterrows():
+            txt_lines.append(f"問題文: {row['問題文']}")
+            for i in range(1, 6):
+                label = f"選択肢{i}"
+                if label in row and pd.notna(row[label]) and row[label].strip() != "":
+                    txt_lines.append(f"{label}: {row[label]}")
+            txt_lines.append(f"正解: {row.get('正解', '')}")
+            txt_lines.append(f"分類: {row.get('科目分類', '')}")
+            txt_lines.append("-" * 40)
+        with open(f"{filename_base}.txt", "w", encoding="utf-8") as f:
+            f.write("\n".join(txt_lines))
+        st.success(f"✅ {filename_base}.txt を保存しました。")
+
+    # 📊 CSV保存
+    if st.button("📥 ヒット結果を .csv で保存"):
+        filtered_df.to_csv(f"{filename_base}.csv", index=False, encoding="utf-8-sig")
+        st.success(f"✅ {filename_base}.csv を保存しました。")
